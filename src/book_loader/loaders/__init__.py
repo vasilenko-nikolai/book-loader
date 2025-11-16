@@ -3,5 +3,5 @@ __all__ = [
     "ranobelib",
 ]
 
-from ._protocol import BookLoader
 from . import ranobelib
+from ._protocol import BookLoader

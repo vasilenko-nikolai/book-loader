@@ -1,6 +1,6 @@
+import logging
 from collections.abc import Iterable
 from dataclasses import dataclass
-import logging
 from typing import Any, ClassVar
 
 import requests
@@ -98,7 +98,7 @@ class RanobelibLoader(BookLoader):
         if to is None:
             to = len(chapters)
 
-        for chapter in chapters[since:to + 1]:
+        for chapter in chapters[since : to + 1]:
             branch_id: int = chapter["branches"][0]["id"]
             self._chapters.append(
                 RanobelibChapter(

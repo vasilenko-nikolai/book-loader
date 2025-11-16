@@ -1,8 +1,7 @@
 import logging
+
 from book_loader.formatters.txt import TxtFormatter
 from book_loader.loaders import ranobelib
-
-
 
 logging.basicConfig(level=logging.INFO)
 
