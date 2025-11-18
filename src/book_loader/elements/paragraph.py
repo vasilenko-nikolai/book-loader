@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from book_loader.elements._protocol import BookElement
 
 if TYPE_CHECKING:
-    from book_loader.visitors import BookElementVisitor
+    from book_loader.formatters import BookFormatterVisitor
 
 
 class ParagraphElement(BookElement):
@@ -13,5 +13,5 @@ class ParagraphElement(BookElement):
     ) -> None:
         self.text = text
 
-    def accept(self, visitor: "BookElementVisitor") -> None:
+    def accept(self, visitor: "BookFormatterVisitor") -> None:
         visitor.visit_paragraph(self)

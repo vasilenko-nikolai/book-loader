@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from book_loader.visitors import BookElementVisitor
+    from book_loader.formatters import BookFormatterVisitor
 
 
 class BookElement(Protocol):
-    def accept(self, visitor: "BookElementVisitor") -> None:
+    def accept(self, visitor: "BookFormatterVisitor") -> None:
         raise NotADirectoryError()

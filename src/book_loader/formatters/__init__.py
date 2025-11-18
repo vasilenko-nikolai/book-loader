@@ -1,7 +1,7 @@
 __all__ = [
-    "BookFormater",
+    "BookFormatterVisitor",
     "TxtFormatter",
 ]
 
-from ._protocol import BookFormater
+from ._protocol import BookFormatterVisitor
 from .txt import TxtFormatter
