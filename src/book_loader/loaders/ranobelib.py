@@ -9,6 +9,7 @@ from urllib3.util.retry import Retry
 
 from book_loader.elements import BookElement, ChapterElement, ParagraphElement
 from book_loader.loaders._protocol import BookLoader
+from book_loader.types.book import BookMeta
 
 
 @dataclass
@@ -36,10 +37,6 @@ class RanobelibLoader(BookLoader):
         self._options = options
         self._chapters: list[RanobelibChapter] = []
 
-    def load(self) -> Iterable[BookElement]:
-        self._init_chapters()
-        chapter_elements = []
-
         session = requests.Session()
         retries = Retry(
             total=4,
@@ -51,6 +48,35 @@ class RanobelibLoader(BookLoader):
         session.mount("http://", adapter)
         session.mount("https://", adapter)
 
+        self._session = session
+
+    def fetch_meta(self) -> BookMeta:
+        response = self._session.get(
+            f'{RanobelibLoader.url}/{self._options.book_name}',
+            params=(
+                ('fields[]', 'summary'),
+                ('fields[]', 'authors'),
+                ('fields[]', 'otherNames'),
+            ),
+            timeout=5,
+            headers={
+                "Site-Id": "3"
+            },
+        
+        )
+        response.raise_for_status()
+        response_json = response.json()
+        return BookMeta(
+            authors=[author['name'] for author in response_json['data']['authors']],
+            name=response_json['data']['rus_name'],
+            description=response_json['data']['summary'],
+            alternative_names=response_json['data'].get('otherNames', None)
+        )
+
+    def fetch_content(self) -> Iterable[BookElement]:
+        self._init_chapters()
+        chapter_elements = []
+
         for chapter in self._chapters:
             logging.info(
                 "load chapter %s, том %s, глава %s",
@@ -59,7 +85,7 @@ class RanobelibLoader(BookLoader):
                 chapter.number,
             )
 
-            response = session.get(
+            response = self._session.get(
                 RanobelibLoader.url + "/" + self._options.book_name + "/chapter",
                 json={
                     "volume": chapter.volume,
