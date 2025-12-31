@@ -1,7 +1,9 @@
+import base64
 from collections.abc import Iterable
 
 from book_loader.elements._protocol import BookElement
 from book_loader.elements.chapter import ChapterElement
+from book_loader.elements.image import ImageElement
 from book_loader.elements.paragraph import ParagraphElement
 from book_loader.formatters._protocol import BookFormatterVisitor
 from book_loader.types import BookMeta
@@ -12,7 +14,9 @@ class Fb2Formatter(BookFormatterVisitor):
         self._xml = ""
         if book_meta is None:
             book_meta = BookMeta()
+
         self._book_meta = book_meta
+        self._binaries: list[str] = []
 
     def format(
         self,
@@ -77,6 +81,7 @@ class Fb2Formatter(BookFormatterVisitor):
 
     def _add_footer(self) -> None:
         self._xml += "</body>"
+        self._xml += "\n".join(self._binaries)
         self._xml += "</FictionBook>"
 
     def visit_chapter(self, chapter: ChapterElement) -> None:
@@ -90,3 +95,15 @@ class Fb2Formatter(BookFormatterVisitor):
 
     def visit_paragraph(self, paragraph: ParagraphElement) -> None:
         self._xml += "<p>" + paragraph.text + "</p>"
+
+    def visit_image(self, image: ImageElement) -> None:
+        image64 = base64.b64encode(image.image)
+        image_id = f"image{len(self._binaries)}"
+        self._binaries.append(
+            f"""
+            <binary id="{image_id}" content-type="image/jpeg">
+            {image64.decode()}
+            </binary>
+            """
+        )
+        self._xml += f'<image l:href="#{image_id}" />'

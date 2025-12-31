@@ -7,7 +7,12 @@ import requests
 from requests.sessions import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from book_loader.elements import BookElement, ChapterElement, ParagraphElement
+from book_loader.elements import (
+    BookElement,
+    ChapterElement,
+    ImageElement,
+    ParagraphElement,
+)
 from book_loader.loaders._protocol import BookLoader
 from book_loader.types.book import BookMeta
 
@@ -27,6 +32,10 @@ class RanobelibChapter:
     title: str
 
 
+@dataclass
+class BookData: ...
+
+
 class RanobelibLoader(BookLoader):
     url: ClassVar[str] = "https://api.cdnlibs.org/api/manga"
 
@@ -36,6 +45,7 @@ class RanobelibLoader(BookLoader):
     ) -> None:
         self._options = options
         self._chapters: list[RanobelibChapter] = []
+        self._attachments: dict[str, bytes] = {}
 
         session = requests.Session()
         retries = Retry(
@@ -92,10 +102,18 @@ class RanobelibLoader(BookLoader):
                 timeout=5,
             )
             response.raise_for_status()
-
             elements: list[BookElement] = []
+            response_json = response.json()
+
+            for attachment in response_json["data"]["attachments"]:
+                image_response = self._session.get(
+                    "https://ranobelib.me/" + attachment["url"],
+                )
+                image_response.raise_for_status()
+                self._attachments[attachment["name"]] = image_response.content
+
             try:
-                self._parse_content(response.json()["data"]["content"], elements)
+                self._parse_content(response_json["data"]["content"], elements)
                 chapter_elements.append(ChapterElement(chapter.title, elements))
             except Exception as e:
                 print(e)
@@ -144,3 +162,10 @@ class RanobelibLoader(BookLoader):
                     self._parse_content(content["content"], elements)
             if content["type"] == "text":
                 elements.append(ParagraphElement(content["text"]))
+            if content["type"] == "image":
+                for image_obj in content["attrs"]["images"]:
+                    if image_obj["image"] not in self._attachments:
+                        logging.warning(f"image {image_obj} is not found")
+                        return
+
+                    elements.append(ImageElement(self._attachments[image_obj["image"]]))

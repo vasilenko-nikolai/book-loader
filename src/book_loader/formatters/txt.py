@@ -1,8 +1,11 @@
 from collections.abc import Iterable
 
-from book_loader.elements import BookElement
-from book_loader.elements.chapter import ChapterElement
-from book_loader.elements.paragraph import ParagraphElement
+from book_loader.elements import (
+    BookElement,
+    ChapterElement,
+    ImageElement,
+    ParagraphElement,
+)
 from book_loader.formatters._protocol import BookFormatterVisitor
 
 
@@ -31,3 +34,6 @@ class TxtFormatter(BookFormatterVisitor):
 
     def visit_paragraph(self, paragraph: ParagraphElement) -> None:
         self._txt += paragraph.text + "\n\n"
+
+    def visit_image(self, image: ImageElement) -> None:
+        return None
