@@ -52,25 +52,22 @@ class RanobelibLoader(BookLoader):
 
     def fetch_meta(self) -> BookMeta:
         response = self._session.get(
-            f'{RanobelibLoader.url}/{self._options.book_name}',
+            f"{RanobelibLoader.url}/{self._options.book_name}",
             params=(
-                ('fields[]', 'summary'),
-                ('fields[]', 'authors'),
-                ('fields[]', 'otherNames'),
+                ("fields[]", "summary"),
+                ("fields[]", "authors"),
+                ("fields[]", "otherNames"),
             ),
             timeout=5,
-            headers={
-                "Site-Id": "3"
-            },
-        
+            headers={"Site-Id": "3"},
         )
         response.raise_for_status()
         response_json = response.json()
         return BookMeta(
-            authors=[author['name'] for author in response_json['data']['authors']],
-            name=response_json['data']['rus_name'],
-            description=response_json['data']['summary'],
-            alternative_names=response_json['data'].get('otherNames', None)
+            authors=[author["name"] for author in response_json["data"]["authors"]],
+            name=response_json["data"]["rus_name"],
+            description=response_json["data"]["summary"],
+            alternative_names=response_json["data"].get("otherNames", None),
         )
 
     def fetch_content(self) -> Iterable[BookElement]:

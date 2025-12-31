@@ -1,5 +1,3 @@
-
-
 from dataclasses import dataclass
 
 
@@ -9,4 +7,3 @@ class BookMeta:
     description: str | None = None
     name: str | None = None
     alternative_names: list[str] | None = None
-
