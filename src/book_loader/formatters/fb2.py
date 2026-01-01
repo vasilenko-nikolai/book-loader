@@ -1,10 +1,12 @@
 import base64
 from collections.abc import Iterable
 
-from book_loader.elements._protocol import BookElement
-from book_loader.elements.chapter import ChapterElement
-from book_loader.elements.image import ImageElement
-from book_loader.elements.paragraph import ParagraphElement
+from book_loader.elements import (
+    BookElement,
+    ChapterElement,
+    ImageElement,
+    ParagraphElement,
+)
 from book_loader.formatters._protocol import BookFormatterVisitor
 from book_loader.types import BookMeta
 
