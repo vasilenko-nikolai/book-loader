@@ -85,42 +85,48 @@ class RanobelibLoader(BookLoader):
         chapter_elements = []
 
         for chapter in self._chapters:
-            logging.info(
-                "load chapter %s, том %s, глава %s",
-                chapter.title,
-                chapter.volume,
-                chapter.number,
-            )
+            chapter_meta = self._fetch_chapter(chapter)
+            self._init_attachments(chapter_meta["attachments"])
 
-            response = self._session.get(
-                RanobelibLoader.url + "/" + self._options.book_name + "/chapter",
-                json={
-                    "volume": chapter.volume,
-                    "branch_id": chapter.branch_id,
-                    "number": chapter.number,
-                },
-                timeout=5,
-            )
-            response.raise_for_status()
             elements: list[BookElement] = []
-            response_json = response.json()
+            self._parse_content(chapter_meta["content"], elements)
 
-            for attachment in response_json["data"]["attachments"]:
-                image_response = self._session.get(
-                    "https://ranobelib.me/" + attachment["url"],
-                )
-                image_response.raise_for_status()
-                self._attachments[attachment["name"]] = image_response.content
-
-            try:
-                self._parse_content(response_json["data"]["content"], elements)
-                chapter_elements.append(ChapterElement(chapter.title, elements))
-            except Exception as e:
-                print(e)
-                print(response.text)
-                raise e
+            chapter_elements.append(ChapterElement(chapter.title, elements))
 
         return chapter_elements
+
+    def _fetch_chapter(self, chapter: RanobelibChapter) -> dict[Any, Any]:
+        logging.info(
+            "load chapter %s, том %s, глава %s",
+            chapter.title,
+            chapter.volume,
+            chapter.number,
+        )
+
+        response = self._session.get(
+            RanobelibLoader.url + "/" + self._options.book_name + "/chapter",
+            json={
+                "volume": chapter.volume,
+                "branch_id": chapter.branch_id,
+                "number": chapter.number,
+            },
+            timeout=5,
+        )
+        response.raise_for_status()
+        response_json = response.json()
+        chapter_meta: dict[Any, Any] = response_json["data"]
+        return chapter_meta
+
+    def _init_attachments(self, attachments: dict[Any, Any]) -> None:
+        logging.info("Start download attachments, count: %s", len(attachments))
+        for attachment in attachments:
+            image_response = self._session.get(
+                "https://ranobelib.me/" + attachment["url"],
+            )
+            image_response.raise_for_status()
+            self._attachments[attachment["name"]] = image_response.content
+            logging.info("Attachment %s downloaded", attachment["name"])
+        logging.info("All attachments downloaded")
 
     def _init_chapters(self) -> None:
         response = requests.get(
